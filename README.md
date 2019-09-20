@@ -1,6 +1,10 @@
-# vue-three-template
+# vue-three-particles
 
-> vue.js + three.js template
+> vue.js + three.js particles animation example
+
+## Demo
+
+[surge.sh](http://vue-three-particles.surge.sh)
 
 ## Build Setup
 

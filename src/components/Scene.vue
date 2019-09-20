@@ -1,10 +1,9 @@
 <template>
-  <section class="scene" ref="scene"></section>
+    <section class="scene" ref="scene"></section>
 </template>
 
 <script>
     import * as THREE from 'three'
-    const OrbitControls = require('three-orbitcontrols')
   
     export default {
         name: 'Scene',
@@ -12,9 +11,9 @@
             return {
                 container: null,
                 camera: null,
-                controls: null,
                 scene: null,
-                renderer: null
+                renderer: null,
+                stars: null
             }
         },
         methods: {
@@ -25,10 +24,9 @@
                 this.scene.background = new THREE.Color( 0x000000 )
                 
                 this.createCamera()
-                this.createControls()
                 this.createLights()
                 this.createRenderer()
-                this.createObject()
+                this.createParticles()
                 
                 this.renderer.setAnimationLoop(() => {
                     this.update()
@@ -41,21 +39,10 @@
                 this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
                 this.camera.position.set( 0, 0, 20 )
             },
-            createControls() {
-                this.controls = new OrbitControls( this.camera, this.container )
-                this.controls.enableZoom = false
-                this.controls.enablePan = false
-                this.controls.autoRotate = true
-                this.controls.autoRotateSpeed = 1
-                this.controls.enableDamping = true
-                this.controls.dampingFactor = 0.5
-            },
             createLights() {
-                const ambientLight = new THREE.AmbientLight( 0x404040, 2 )
-                const directionalLight = new THREE.DirectionalLight( 0xffffff, 5 )
-                directionalLight.position.set( 10, 10, 10 )
+                const ambientLight = new THREE.AmbientLight( 0xf2f2f2, 2 )
                 
-                this.scene.add( ambientLight, directionalLight )
+                this.scene.add( ambientLight )
             },
             createRenderer() {
                 this.renderer = new THREE.WebGLRenderer( { antialias: true } )
@@ -65,21 +52,43 @@
 
                 this.container.appendChild( this.renderer.domElement )
             },
-            createObject() {
-                let sphereGeometry = new THREE.SphereGeometry( 2, 32, 32 )
-                let sphereMaterial = new THREE.MeshPhysicalMaterial({
-                    color: 0xffffff,
-                    metalness: 0.5,
-                    roughness: 0.5,
-                    reflectivity: 0.5
+            createParticles() {
+                let count = 8000
+                let sprite = new THREE.TextureLoader().load('/static/images/nova.png')
+                let geometry = new THREE.Geometry()
+                let material = new THREE.PointsMaterial({
+                    size: 0.85,
+                    map: sprite
                 })
                 
-                let sphere = new THREE.Mesh( sphereGeometry, sphereMaterial )
+                while ( count ) {
+                    let star = new THREE.Vector3(
+                        Math.random() * 400 - 200,
+                        Math.random() * 400 - 200,
+                        Math.random() * 400 - 200
+                    )
+                    
+                    star.velocity = 0.99
+                    
+                    geometry.vertices.push(star)
+                    
+                    count--
+                }
                 
-                this.scene.add( sphere )
+                this.stars = new THREE.Points( geometry, material )
+                
+                this.scene.add( this.stars )
             },
             update() {
-                this.controls.update()
+                this.stars.geometry.vertices.forEach((star) => {
+                    star.z += star.velocity
+                    
+                    if ( star.z >= 200 ) {
+                        star.z = -200
+                    }
+                })
+                
+                this.stars.geometry.verticesNeedUpdate = true
             },
             render() {
                 this.renderer.render( this.scene, this.camera )
@@ -93,6 +102,7 @@
         },
         mounted() {
             this.init()
+            console.log(this.stars)
         }
     }
 </script>
